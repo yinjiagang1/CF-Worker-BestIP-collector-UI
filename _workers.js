@@ -1,5 +1,5 @@
 // 自定义优质IP数量
-const FAST_IP_COUNT = 20; // 修改这个数字来自定义优质IP数量
+const FAST_IP_COUNT = 50; // 修改这个数字来自定义优质IP数量
 const AUTO_TEST_MAX_IPS = 200; // 自动测速的最大IP数量，避免测速过多导致超时
 
 export default {
@@ -906,7 +906,6 @@ export default {
                   
                   <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                        <button class="button button-warning" onclick="openTokenModal()">⚙️ 配置 Token</button>
-                       ${tokenConfig ? `<button class="button button-secondary" onclick="copyToken()">📋 复制 Token</button>` : ''}
                   </div>
               </div>
 
