@@ -14,10 +14,22 @@
 // 增加了Token管理
 // 新增CFnew自动更新引用url
 // 新增国旗 国家
+/**
+ * Cloudflare Worker IP 采集器与测速器
+ * 整理优化版
+ */
+
+// ==========================================
+// 1. 全局配置
+// ==========================================
 // 自定义保留的优质IP数量
-const FAST_IP_COUNT = 20; 
+const FAST_IP_COUNT = 50; 
 // 自动测速时的最大IP数量，防止超时
 const AUTO_TEST_MAX_IPS = 200; 
+
+// ==========================================
+// 2. WORKER 程序入口
+// ==========================================
 export default {
   // 定时任务处理器
   async scheduled(event, env, ctx) {
@@ -66,7 +78,7 @@ export default {
       });
     }
 
-    // 2. CORS 预检请求
+    // 2. CORS 预检
     if (request.method === 'OPTIONS') {
       return handleCORS();
     }
@@ -92,7 +104,7 @@ export default {
     const _cookie = request.headers.get('Cookie') || '';
     const _isAuthorized = await verifyAuthCookie(_cookie, env.password);
 
-    // 公开访问白名单：edgetunnel, cfnew, 自定义端口
+    // 公开白名单：edgetunnel, cfnew, 自定义端口
     const publicPaths = ['/edgetunnel.txt', '/cfnew.txt', '/cf-custom-port'];
     
     if (!_isAuthorized && !publicPaths.includes(_authUrl.pathname)) {
@@ -119,7 +131,7 @@ export default {
         case '/raw':
           return await handleRawIPs(env);
         
-        // 测速相关
+        // 测速
         case '/speedtest':
           return await handleSpeedTest(request, env);
         case '/save-speed-results':
@@ -160,6 +172,10 @@ export default {
     }
   }
 };
+
+// ==========================================
+// 3. 路由处理 (API 逻辑)
+// ==========================================
 
 // --- IP 获取接口 ---
 
@@ -352,7 +368,7 @@ async function handleSaveSpeedResults(request, env) {
   }
 }
 
-// --- 自定义源管理接口 ---
+// --- 自定义源管理 ---
 
 async function handleSaveCustomSource(request, env) {
   try {
@@ -405,7 +421,7 @@ async function handleDeleteCustomSource(request, env) {
   }
 }
 
-// --- Token 管理接口 ---
+// --- Token 管理 ---
 
 async function handleAdminToken(request, env) {
   if (request.method === 'GET') {
@@ -450,6 +466,10 @@ async function handleAdminToken(request, env) {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 }
+
+// ==========================================
+// 4. 核心业务逻辑
+// ==========================================
 
 async function updateAllIPs(env) {
   const urls = [
@@ -597,6 +617,10 @@ async function testIPSpeed(ip) {
   }
 }
 
+// ==========================================
+// 5. 存储与认证辅助函数
+// ==========================================
+
 async function getStoredIPs(env) {
   try {
     if (!env.IP_STORAGE) return getDefaultData();
@@ -697,6 +721,10 @@ function tokenErrorResponse() {
   });
 }
 
+// ==========================================
+// 6. 工具函数
+// ==========================================
+
 function getColoFlag(colo) {
   const coloMap = {
     'HKG': '🇭🇰 香港', 'TPE': '🇹🇼 台湾', 'KHH': '🇹🇼 台湾',
@@ -784,6 +812,10 @@ async function sha256(text) {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+// ==========================================
+// 7. UI 生成器 (HTML/CSS/前端 JS)
+// ==========================================
 
 async function serveAuthPage(env) {
   const html = `<!DOCTYPE html>
@@ -1079,7 +1111,7 @@ async function serveHTML(env) {
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>正在从多个来源收集 IP 地址并测速，请稍候...</p>
+                <p>正在从多个来源收集 IP 地址，请稍候...</p>
             </div>
             
             <div class="result" id="result"></div>
